@@ -1,17 +1,65 @@
+<%- include("top.ejs") %>
 <main>
-    <link href="/Css/style.css" rel="stylesheet" type="text/css">
+    <div id="lineForm">
+        <input type="text" id="name" placeholder="שם העובד">
+        <br>
+        <input type="text" id="email" placeholder="כתובת דוא"ל">
+        <br>
+        <button onclick="AddEmployee();">הוסף עובד</button>
+    </div>
+    <div id="employeeList">
+        <h2>רשימת עובדים</h2>
+        <ul id="employeeUL">
 
-    <form action="/main/Add" method="post">
-        <input type="text" name="first_name"          id= "first_name"     placeholder="first_name"       /> <br><br>
-        <input type="text" name="last_name "   id="last_name "placeholder="last_name "/> <br><br>
-        <select name="category_id"   id="category_id" >
-            <option value="2">line 1</option>
-            <option value="5">line more</option>
-        </select>
-        <br><br>
-        <input type="text" name="owner_id   "   id="owner_id   " placeholder="owner_id   "/> <br><br>
-        <input type="text" name="creator_id "   id="creator_id " placeholder="creator_id "/> <br><br>
-        <button>send</button>
-    </form>
-    <script> src=""</script>
+        </ul>
+    </div>
 </main>
+<script>
+    async function AddEmployee(){
+        let name = document.getElementById("name").value;
+        let email = document.getElementById("email").value;
+        let response = await fetch('/employees/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({name: name, email: email})
+        });
+        let result = await response.json();
+        if (result.success) {
+
+            let ul = document.getElementById("employeeUL");
+            let li = document.createElement("li");
+            li.appendChild(document.createTextNode(name + " - " + email));
+            ul.appendChild(li);
+            // לאפס את השדות
+            document.getElementById("name").value = "";
+            document.getElementById("email").value = "";
+        } else {
+            alert(result.message);
+        }
+    }
+
+
+    async function loadEmployees() {
+        let response = await fetch('/employees');
+        let employees = await response.json();
+        let ul = document.getElementById("employeeUL");
+        employees.forEach(employee => {
+            let li = document.createElement("li");
+            li.appendChild(document.createTextNode(employee.name + " - " + employee.email));
+            ul.appendChild(li);
+        });
+    }
+
+
+    window.addEventListener('load', loadEmployees);
+</script>
+<%- include("bottom.ejs") %>
+
+
+
+
+
+
+

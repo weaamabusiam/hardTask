@@ -1,0 +1,15 @@
+<%- include("top.ejs") %>
+<main>
+    <h2>ניהול עובדים</h2>
+
+
+    <form action="/employees/add" method="post">
+        <input type="text" name="name" placeholder="שם העובד" required>
+        <input type="text" name="firstname" placeholder="שם פרטי" required>
+        <input type="text" name="lastname" placeholder="שם משפחה" required>
+        <input type="text" name="email" placeholder="כתובת דוא"ל" required>
+        <button type="submit">הוסף עובד</button>
+    </form>
+</main>
+
+    <%- include("bottom.ejs") %>
