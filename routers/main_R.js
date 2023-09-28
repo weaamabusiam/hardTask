@@ -3,47 +3,55 @@ const router = express.Router();
 module.exports = router;
 
 
- router.get("/",function (req,res){
-   res.render("main",{});
+app.get("/",(req, res) => {
+    res.sendFile("./Views/main.html", {root: __dirname});
+});
+app.get("/List",(req, res) => {
+    let data=AllData;
+    for(let k in data){
+        data[k].idxOnServer=k;
+    }
+
+    res.send(data).json();
+});
+app.post("/Add",(req, res) => {
+    let line={};
+    line.name = req.body.name;
+    line.id = req.body.id;
+    line.email = req.body.email;
+    AllData.push(line);
+    console.log(req.body);
+    res.send("Ready to Add EndPoint");
+});
+app.post("/Add2",(req, res) => {
+    let line={};
+    line.name = req.body.name;
+    line.id = req.body.id;
+    line.email = req.body.email;
+    AllData.push(line);
+    line={};
+    line.name = req.body.name2;
+    line.id = req.body.id2;
+    line.email = req.body.email;
+    AllData.push(line);
+    res.send("Ready to Add EndPoint");
+});
+app.post("/Delete",(req, res) => {
+    let idx= req.body.idx;
+    console.log("del",idx);
+    AllData.splice(Number(idx),1);
+    res.send("Ready to Delete");
+});
+app.post("/Update",(req, res) => {
+    let idx=req.body.idx;
+    AllData[idx].name = req.body.name;
+    AllData[idx].id = req.body.id;
+    AllData[idx].email = req.body.email;
+    res.send("updated");
 });
 
-router.post('/add', function (req, res) {
-    const { name, firstname, lastname, email } = req.body;
-    const query = `INSERT INTO Employees (name, firstname, lastname, email) VALUES ('${name}', '${firstname}', '${lastname}', '${email}')`;
-    console.log("Adding Employee", query);
-    db_pool.query(query, function(err, rows, fields) {
-        if (err) {
-            res.status(500).json({ message: err });
-        } else {
-            res.status(200).json({ message: "OK", lastId: rows.insertId });
-        }
-    });
-});
-
-
-router.post('/delete/:id', function (req, res) {
-    const id = req.params.id;
-    const query = `DELETE FROM Employees WHERE id = ${id}`;
-    db_pool.query(query, function(err, rows, fields) {
-        if (err) {
-            res.status(500).json({ message: err });
-        } else {
-            res.status(200).json({ message: "OK" });
-        }
-    });
-});
-
-
-router.post('/update/:id', function (req, res) {
-    const id = req.params.id;
-    const { name, firstname, lastname, email } = req.body;
-    const query = `UPDATE Employees SET name = '${name}', firstname = '${firstname}', lastname = '${lastname}', email = '${email}' WHERE id = ${id}`;
-    db_pool.query(query, function(err, rows, fields) {
-        if (err) {
-            res.status(500).json({ message: err });
-        } else {
-            res.status(200).json({ message: "OK" });
-        }
-    });
+//------------------------------------------------
+app.listen(port, () => {            //server starts listening for any attempts from a client to connect at port: {port}
+    console.log(`Now listening on port ${port}`);
 });
 

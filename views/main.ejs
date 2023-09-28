@@ -1,65 +1,113 @@
 <%- include("top.ejs") %>
-<main>
-    <div id="lineForm">
-        <input type="text" id="name" placeholder="שם העובד">
-        <br>
-        <input type="text" id="email" placeholder="כתובת דוא"ל">
-        <br>
-        <button onclick="AddEmployee();">הוסף עובד</button>
-    </div>
-    <div id="employeeList">
-        <h2>רשימת עובדים</h2>
-        <ul id="employeeUL">
+<title>מסך עובדים</title>
 
-        </ul>
-    </div>
-</main>
+<body>
+
+<div id="AddForm">
+    <input type="text" name="name"  id="name"  placeholder="name" />
+    <input type="text" name="id" id="id" placeholder="id" />
+    <input type="text" name="email"   id="email"   placeholder="email" />
+    <button onclick="addNewLine();" >send</button>
+</div>
+<br/>
+<input type="search" id="filterField" oninput="CreateTble();">
+<hr/>
+<button onclick="getList();">fetch</button>
+<hr/>
+<button onclick="deleteLine();">delete</button>
+<hr/>
+<button onclick="editLine(1);">Edit</button>
+<table>
+    <thead>
+    <tr>
+        <th>name</th>
+        <th>id</th>
+        <th>email</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody id="mainTable">  </tbody>
+</table>
 <script>
-    async function AddEmployee(){
-        let name = document.getElementById("name").value;
-        let email = document.getElementById("email").value;
-        let response = await fetch('/employees/add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({name: name, email: email})
-        });
-        let result = await response.json();
-        if (result.success) {
+    let raw_data=[];
+    let srchTerm="";
 
-            let ul = document.getElementById("employeeUL");
-            let li = document.createElement("li");
-            li.appendChild(document.createTextNode(name + " - " + email));
-            ul.appendChild(li);
-            // לאפס את השדות
-            document.getElementById("name").value = "";
-            document.getElementById("email").value = "";
-        } else {
-            alert(result.message);
+    function FilterData(el){
+        console.log("FilterData::",el);
+        if(srchTerm=="")
+            return true;
+        let reg=new RegExp(srchTerm,"i");
+        if(reg.test(el.name)){
+            return true;
         }
+        return false;
+    }
+    function CreateTble(){
+        srchTerm=document.getElementById("filterField").value;
+        let data=raw_data.filter(FilterData);
+        let str="";
+        for(let line of data){
+            str+="<tr>";
+            str+="<td>"+line.name+"</td>";
+            str+=`<td>${line.id}</td>`;
+            str+=`<td>${line.email}</td>`;
+            str+=`<td><button onclick="deleteLine(${line.idxOnServer});">delete</button></td>`;
+            str+="</tr>";
+        }
+        document.getElementById("mainTable").innerHTML=str;
     }
 
-
-    async function loadEmployees() {
-        let response = await fetch('/employees');
-        let employees = await response.json();
-        let ul = document.getElementById("employeeUL");
-        employees.forEach(employee => {
-            let li = document.createElement("li");
-            li.appendChild(document.createTextNode(employee.name + " - " + employee.email));
-            ul.appendChild(li);
-        });
+    async function getList() {
+        let response = await fetch('/List');
+        let data = await response.json();
+        raw_data = data;
+        CreateTble();
     }
 
+    async function addNewLine() {
+        let name=document.getElementById("name").value;
+        let id=document.getElementById("id").value;
+        let email=document.getElementById("email").value;
+        let response = await fetch('/Add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({name: name, id: id, email: email})
+            }
+        );
+        getList();
+    }
+    async function deleteLine(id) {
+        let objToServer={};
+        objToServer.idx=id;
+        let response = await fetch('/Delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(objToServer)
+            }
+        );
+        getList();
+    }
+    async function editLine(id) {
+        let objToServer={};
+        objToServer.idx=id;
+        objToServer.name=document.getElementById("name").value;
+        objToServer.id=document.getElementById("id").value;
+        objToServer.email=document.getElementById("email").value;
+        let response = await fetch('/Update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(objToServer)
+            }
+        );
+        getList();
+    }
 
-    window.addEventListener('load', loadEmployees);
+    getList();
 </script>
 <%- include("bottom.ejs") %>
-
-
-
-
-
-
-
