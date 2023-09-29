@@ -1,19 +1,21 @@
 const express = require('express');
 const router = express.Router();
+const { format } = require('date-fns'); // הוסף את החבילה date-fns
+
 module.exports = router;
 
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
-router.get("/",function (req,res){
-    res.render("main",{});
+router.get("/", function (req, res) {
+    res.render("main", {});
 });
 
 function saveEntry(employeeId, name, id, date) {
-    const currentTime = new Date().toISOString();
-    const query = `INSERT INTO entry_exit (employee_id, name, id, date, entry_time) VALUES (${employeeId}, '${name}', '${id}', '${date}', '${currentTime}')`;
+    const formattedTime = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+    const query = `INSERT INTO entry_exit (employee_id, name, id, date, entry_time) VALUES (${employeeId}, '${name}', '${id}', '${date}', '${formattedTime}')`;
 
-    db_pool.query(query, function(err, rows, fields) {
+    db_pool.query(query, function (err, rows, fields) {
         if (err) {
             console.error(err);
         } else {
@@ -23,10 +25,10 @@ function saveEntry(employeeId, name, id, date) {
 }
 
 function saveExit(employeeId) {
-    const currentTime = new Date().toISOString();
-    const query = `UPDATE entry_exit SET exit_time = '${currentTime}' WHERE employee_id = ${employeeId} AND exit_time IS NULL`;
+    const formattedTime = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+    const query = `UPDATE entry_exit SET exit_time = '${formattedTime}' WHERE employee_id = ${employeeId} AND exit_time IS NULL`;
 
-    db_pool.query(query, function(err, rows, fields) {
+    db_pool.query(query, function (err, rows, fields) {
         if (err) {
             console.error(err);
         } else {
@@ -35,10 +37,10 @@ function saveExit(employeeId) {
     });
 }
 
-router.get('/entry-exit', function(req, res) {
+router.get('/entry-exit', function (req, res) {
     const selectQuery = 'SELECT * FROM employees';
 
-    db_pool.query(selectQuery, function(err, employees, fields) {
+    db_pool.query(selectQuery, function (err, employees, fields) {
         if (err) {
             console.error(err);
             res.status(500).send('Internal Server Error');
@@ -48,10 +50,10 @@ router.get('/entry-exit', function(req, res) {
     });
 });
 
-router.get('/employees-management', function(req, res) {
+router.get('/employees-management', function (req, res) {
     const selectQuery = 'SELECT * FROM employees';
 
-    db_pool.query(selectQuery, function(err, employees, fields) {
+    db_pool.query(selectQuery, function (err, employees, fields) {
         if (err) {
             console.error(err);
             res.status(500).send('Internal Server Error');
@@ -61,11 +63,11 @@ router.get('/employees-management', function(req, res) {
     });
 });
 
-router.post('/employees-management/add', function(req, res) {
+router.post('/employees-management/add', function (req, res) {
     const { first_name, last_name } = req.body;
     const insertQuery = `INSERT INTO employees (first_name, last_name) VALUES ('${first_name}', '${last_name}')`;
 
-    db_pool.query(insertQuery, function(err, result) {
+    db_pool.query(insertQuery, function (err, result) {
         if (err) {
             console.error(err);
             res.status(500).send('Internal Server Error');
@@ -75,11 +77,11 @@ router.post('/employees-management/add', function(req, res) {
     });
 });
 
-router.post('/employees-management/update', function(req, res) {
+router.post('/employees-management/update', function (req, res) {
     const { employee_id, first_name, last_name } = req.body;
     const updateQuery = `UPDATE employees SET first_name = '${first_name}', last_name = '${last_name}' WHERE employee_id = ${employee_id}`;
 
-    db_pool.query(updateQuery, function(err, result) {
+    db_pool.query(updateQuery, function (err, result) {
         if (err) {
             console.error(err);
             res.status(500).send('Internal Server Error');
@@ -89,11 +91,11 @@ router.post('/employees-management/update', function(req, res) {
     });
 });
 
-router.post('/employees-management/delete', function(req, res) {
+router.post('/employees-management/delete', function (req, res) {
     const { employee_id } = req.body;
     const deleteQuery = `DELETE FROM employees WHERE employee_id = ${employee_id}`;
 
-    db_pool.query(deleteQuery, function(err, result) {
+    db_pool.query(deleteQuery, function (err, result) {
         if (err) {
             console.error(err);
             res.status(500).send('Internal Server Error');

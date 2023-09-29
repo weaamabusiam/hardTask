@@ -7,19 +7,17 @@
     <form id="employeeForm">
         <input type="text" name="name" id="name" placeholder="שם" />
         <input type="text" name="id" id="id" placeholder="מספר זיהוי" />
-        <input type="date" name="date" id="date" placeholder="תאריך" />
         <button type="button" onclick="addNewRow();">הוסף שורה</button>
     </form>
+    <button onclick="clockIn();">כניסה</button>
+    <button onclick="clockOut();">יציאה</button>
 </div>
 
 <hr>
 <button onclick="deleteRow();">מחק שורה</button>
 <hr/>
-<button onclick="editRow(1);">ערוך שורה</button>
+<button onclick="editRow();">ערוך שורה</button>
 <hr/>
-<button onclick="clockIn();">כניסה</button>
-<hr/>
-<button onclick="clockOut();">יציאה</button>
 
 <table>
     <thead>
@@ -40,6 +38,7 @@
 
 <script>
     let raw_data=[];
+    let currentEditIndex = -1; // עריכה נוכחית, מתחילה ממספר שאינו תקין
 
     function CreateTable(){
         let str="";
@@ -49,11 +48,22 @@
             str+="<td>"+raw_data[i].id+"</td>";
             str+="<td>"+raw_data[i].date+"</td>";
             str+="<td id='clockInTime_"+i+"'>"+raw_data[i].clockIn+"</td>";
-            str+="<td>"+raw_data[i].clockOut+"</td>";
+            str+="<td id='clockOutTime_"+i+"'>"+raw_data[i].clockOut+"</td>";
             str+="<td><button onclick='deleteRow("+i+");'>מחק</button></td>";
             str+="</tr>";
         }
         document.getElementById("mainTable").innerHTML=str;
+    }
+
+    function clearForm() {
+        document.getElementById("name").value = "";
+        document.getElementById("id").value = "";
+    }
+
+    function enableEditMode(index) {
+        currentEditIndex = index;
+        document.getElementById("name").value = raw_data[index].name;
+        document.getElementById("id").value = raw_data[index].id;
     }
 
     async function getList() {
@@ -66,58 +76,101 @@
     async function addNewRow() {
         let name=document.getElementById("name").value;
         let id=document.getElementById("id").value;
-        let date=document.getElementById("date").value;
 
-        if (name.trim() !== "" && id.trim() !== "" && date.trim() !== "") {
+        if (name.trim() !== "" && id.trim() !== "") {
+            let date = new Date().toLocaleDateString();
+            let currentTime = new Date().toLocaleTimeString();
             raw_data.push({
                 name: name,
                 id: id,
                 date: date,
-                clockIn: "",
+                clockIn: currentTime,
                 clockOut: ""
             });
+            CreateTable();
+            clearForm();
+        }
+    }
+
+    async function deleteRow() {
+        if (currentEditIndex !== -1) {
+            raw_data.splice(currentEditIndex, 1);
+            currentEditIndex = -1;
+            clearForm();
             CreateTable();
         }
     }
 
-    async function deleteRow(idx) {
-        raw_data.splice(idx, 1);
-        CreateTable();
-    }
+    async function editRow() {
+        if (currentEditIndex !== -1) {
+            let name=document.getElementById("name").value;
+            let id=document.getElementById("id").value;
 
-    async function editRow(idx) {
-        // הוספת קוד לעריכת שורה
+            if (name.trim() !== "" && id.trim() !== "") {
+                raw_data[currentEditIndex].name = name;
+                raw_data[currentEditIndex].id = id;
+                CreateTable();
+                clearForm();
+                currentEditIndex = -1;
+            }
+        }
     }
 
     async function clockIn() {
         let name = document.getElementById("name").value;
         let id = document.getElementById("id").value;
-        let date = document.getElementById("date").value;
 
-        if (name.trim() !== "" && id.trim() !== "" && date.trim() !== "") {
-            let currentTime = new Date();
-            let hours = currentTime.getHours();
-            let minutes = currentTime.getMinutes();
-            raw_data[raw_data.length - 1].clockIn = `${hours}:${minutes}`;
-            CreateTable();
+        if (name.trim() !== "" && id.trim() !== "") {
+            let date = new Date().toLocaleDateString();
+            let currentTime = new Date().toLocaleTimeString();
+
+            // שלח בקשת POST לשרת עם המידע הנדרש
+            fetch('/clockIn', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    id: id,
+                    date: date,
+                    currentTime: currentTime
+                })
+            }).then(response => response.json()).then(data => {
+                // כאן אתה מקבל את התאריך המדויק מהשרת ותוכל לעדכן את השורה הרלוונטית בטבלה
+                // דוגמא: document.getElementById("clockInTime_" + rowIdx).textContent = data.exactTime;
+            }).catch(error => {
+                console.error(error);
+            });
         }
     }
 
     async function clockOut() {
         let name = document.getElementById("name").value;
         let id = document.getElementById("id").value;
-        let date = document.getElementById("date").value;
 
-        if (name.trim() !== "" && id.trim() !== "" && date.trim() !== "") {
-            let currentTime = new Date();
-            let hours = currentTime.getHours();
-            let minutes = currentTime.getMinutes();
+        if (name.trim() !== "" && id.trim() !== "") {
+            let date = new Date().toLocaleDateString();
+            let currentTime = new Date().toLocaleTimeString();
 
-            // עדכון שדה השעה של היציאה בדף HTML
-            document.getElementById("exitTime").value = `${hours}:${minutes}`;
-
-            raw_data[raw_data.length - 1].clockOut = `${hours}:${minutes}`;
-            CreateTable();
+            // שלח בקשת POST לשרת עם המידע הנדרש
+            fetch('/clockOut', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    id: id,
+                    date: date,
+                    currentTime: currentTime
+                })
+            }).then(response => response.json()).then(data => {
+                // כאן אתה מקבל את התאריך המדויק מהשרת ותוכל לעדכן את השורה הרלוונטית בטבלה
+                // דוגמא: document.getElementById("clockOutTime_" + rowIdx).textContent = data.exactTime;
+            }).catch(error => {
+                console.error(error);
+            });
         }
     }
 
