@@ -4,32 +4,36 @@
 <body>
 
 <div id="AddForm">
-    <input type="text" name="name"  id="name"  placeholder="name" />
-    <input type="text" name="id" id="id" placeholder="id" />
-    <button onclick="addNewLine();" >send</button>
+    <form id="employeeForm">
+        <input type="text" name="name" id="name" placeholder="שם" />
+        <input type="text" name="id" id="id" placeholder="מספר זיהוי" />
+        <input type="date" name="date" id="date" placeholder="תאריך" />
+        <button type="button" onclick="addNewRow();">הוסף שורה</button>
+    </form>
 </div>
-<br/>
-
 
 <hr>
-<button onclick="deleteLine();">delete</button>
+<button onclick="deleteRow();">מחק שורה</button>
 <hr/>
-<button onclick="editLine(1);">Edit</button>
+<button onclick="editRow(1);">ערוך שורה</button>
 <hr/>
-<button onclick="editLine(1);">Add</button>
+<button onclick="clockIn();">כניסה</button>
+<hr/>
+<button onclick="clockOut();">יציאה</button>
 
 <table>
     <thead>
     <tr>
-        <th>name</th>
-        <th>id</th>
-        <th>date</th>
+        <th>שם</th>
+        <th>מספר זיהוי</th>
+        <th>תאריך</th>
         <th>כניסה</th>
         <th>יציאה</th>
     </tr>
     </thead>
     <tbody id="mainTable">  </tbody>
 </table>
+
 <script>
     let raw_data=[];
     let srchTerm="";
@@ -44,7 +48,8 @@
         }
         return false;
     }
-    function CreateTble(){
+
+    function CreateTable(){
         srchTerm=document.getElementById("filterField").value;
         let data=raw_data.filter(FilterData);
         let str="";
@@ -52,10 +57,10 @@
             str+="<tr>";
             str+="<td>"+line.name+"</td>";
             str+=`<td>${line.id}</td>`;
-            str+=`<td>${line.email}</td>`;
-            str+=`<td>${line.כניסה }</td>`;
-            str+=`<td>${line.יציאה}</td>`;
-            str+=`<td><button onclick="deleteLine(${line.idxOnServer});">delete</button></td>`;
+            str+=`<td>${line.date}</td>`;
+            str+=`<td>${line.clockIn}</td>`;
+            str+=`<td>${line.clockOut}</td>`;
+            str+=`<td><button onclick="deleteRow(${line.idxOnServer});">מחק</button></td>`;
             str+="</tr>";
         }
         document.getElementById("mainTable").innerHTML=str;
@@ -65,56 +70,50 @@
         let response = await fetch('/List');
         let data = await response.json();
         raw_data = data;
-        CreateTble();
+        CreateTable();
     }
 
-    async function addNewLine() {
+    async function addNewRow() {
         let name=document.getElementById("name").value;
         let id=document.getElementById("id").value;
-        let email=document.getElementById("email").value;
-        let כניסה=document.getElementById("כניסה").value;
-        let יציאה=document.getElementById("יציאה").value;
-        let response = await fetch('/Add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({name: name, id: id, email: email})
-            }
-        );
-        getList();
+        let date=document.getElementById("date").value;
+
+        if (name.trim() !== "" && id.trim() !== "" && date.trim() !== "") {
+            let newRow = document.getElementById("mainTable").insertRow();
+            newRow.innerHTML = `<td>${name}</td><td>${id}</td><td>${date}</td><td></td><td></td><td><button onclick="deleteRow(${raw_data.length});">מחק</button></td>`;
+
+            // אפשר גם לשמור את הנתונים במערך ולשלוח אותם לשרת כאשר משתמשים מצליחים
+            // להוסיף את הנתונים לטבלה ולשמור אותם במערך
+            raw_data.push({
+                name: name,
+                id: id,
+                date: date,
+                clockIn: "",
+                clockOut: "",
+                idxOnServer: raw_data.length
+            });
+        }
     }
-    async function deleteLine(id) {
-        let objToServer={};
-        objToServer.idx=id;
-        let response = await fetch('/Delete', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(objToServer)
-            }
-        );
-        getList();
+
+    async function deleteRow(idx) {
+        document.getElementById("mainTable").deleteRow(idx);
+        raw_data.splice(idx - 1, 1);
+        CreateTable();
     }
-    async function editLine(id) {
-        let objToServer={};
-        objToServer.idx=id;
-        objToServer.name=document.getElementById("name").value;
-        objToServer.id=document.getElementById("id").value;
-        objToServer.email=document.getElementById("כניסה").value;
-        objToServer.email=document.getElementById("יציאה").value;
-        let response = await fetch('/Update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(objToServer)
-            }
-        );
-        getList();
+
+    async function editRow(idx) {
+        // הוספת קוד לעריכת שורה
+    }
+
+    async function clockIn() {
+        // הוספת קוד לכניסה
+    }
+
+    async function clockOut() {
+        // הוספת קוד ליציאה
     }
 
     getList();
 </script>
 <%- include("bottom.ejs") %>
+

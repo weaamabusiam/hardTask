@@ -4,7 +4,7 @@ module.exports = router;
 
 
 app.get("/",(req, res) => {
-    res.sendFile("./Views/main.html", {root: __dirname});
+    res.sendFile("./Views/main.ejs", {root: __dirname});
 });
 app.get("/List",(req, res) => {
     let data=AllData;
@@ -18,7 +18,9 @@ app.post("/Add",(req, res) => {
     let line={};
     line.name = req.body.name;
     line.id = req.body.id;
-    line.email = req.body.email;
+    line.date = req.body.date;
+    line.כניסה = req.body.כניסה;
+    line.יציאה = req.body.יציאה;
     AllData.push(line);
     console.log(req.body);
     res.send("Ready to Add EndPoint");
@@ -27,12 +29,16 @@ app.post("/Add2",(req, res) => {
     let line={};
     line.name = req.body.name;
     line.id = req.body.id;
-    line.email = req.body.email;
+    line.date = req.body.date;
+    line.כניסה = req.body.כניסה;
+    line.יציאה = req.body.יציאה;
     AllData.push(line);
     line={};
     line.name = req.body.name2;
     line.id = req.body.id2;
-    line.email = req.body.email;
+    line.date = req.body.date2;
+    line.כניסה = req.body.כניסה2;
+    line.יציאה = req.body.יציאה2;
     AllData.push(line);
     res.send("Ready to Add EndPoint");
 });
@@ -46,7 +52,11 @@ app.post("/Update",(req, res) => {
     let idx=req.body.idx;
     AllData[idx].name = req.body.name;
     AllData[idx].id = req.body.id;
-    AllData[idx].email = req.body.email;
+    AllData[idx].date= req.body.date;
+    AllData[idx].כניסה = req.body.כניסה;
+    AllData[idx].יציאה = req.body.יציאה;
+
+
     res.send("updated");
 });
 
