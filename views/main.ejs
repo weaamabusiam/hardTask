@@ -6,24 +6,26 @@
 <div id="AddForm">
     <input type="text" name="name"  id="name"  placeholder="name" />
     <input type="text" name="id" id="id" placeholder="id" />
-    <input type="text" name="email"   id="email"   placeholder="email" />
     <button onclick="addNewLine();" >send</button>
 </div>
 <br/>
-<input type="search" id="filterField" oninput="CreateTble();">
-<hr/>
-<button onclick="getList();">fetch</button>
-<hr/>
+
+
+<hr>
 <button onclick="deleteLine();">delete</button>
 <hr/>
 <button onclick="editLine(1);">Edit</button>
+<hr/>
+<button onclick="editLine(1);">Add</button>
+
 <table>
     <thead>
     <tr>
         <th>name</th>
         <th>id</th>
-        <th>email</th>
-        <th></th>
+        <th>date</th>
+        <th>כניסה</th>
+        <th>יציאה</th>
     </tr>
     </thead>
     <tbody id="mainTable">  </tbody>
@@ -51,6 +53,8 @@
             str+="<td>"+line.name+"</td>";
             str+=`<td>${line.id}</td>`;
             str+=`<td>${line.email}</td>`;
+            str+=`<td>${line.כניסה }</td>`;
+            str+=`<td>${line.יציאה}</td>`;
             str+=`<td><button onclick="deleteLine(${line.idxOnServer});">delete</button></td>`;
             str+="</tr>";
         }
@@ -68,6 +72,8 @@
         let name=document.getElementById("name").value;
         let id=document.getElementById("id").value;
         let email=document.getElementById("email").value;
+        let כניסה=document.getElementById("כניסה").value;
+        let יציאה=document.getElementById("יציאה").value;
         let response = await fetch('/Add', {
                 method: 'POST',
                 headers: {
@@ -96,7 +102,8 @@
         objToServer.idx=id;
         objToServer.name=document.getElementById("name").value;
         objToServer.id=document.getElementById("id").value;
-        objToServer.email=document.getElementById("email").value;
+        objToServer.email=document.getElementById("כניסה").value;
+        objToServer.email=document.getElementById("יציאה").value;
         let response = await fetch('/Update', {
                 method: 'POST',
                 headers: {
