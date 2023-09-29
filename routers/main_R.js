@@ -2,66 +2,163 @@ const express = require('express');
 const router = express.Router();
 module.exports = router;
 
+router.use(express.json());
+router.use(express.urlencoded({ extended: true }));
 
-app.get("/",(req, res) => {
-    res.sendFile("./Views/main.ejs", {root: __dirname});
-});
-app.get("/List",(req, res) => {
-    let data=AllData;
-    for(let k in data){
-        data[k].idxOnServer=k;
-    }
-
-    res.send(data).json();
-});
-app.post("/Add",(req, res) => {
-    let line={};
-    line.name = req.body.name;
-    line.id = req.body.id;
-    line.date = req.body.date;
-    line.כניסה = req.body.כניסה;
-    line.יציאה = req.body.יציאה;
-    AllData.push(line);
-    console.log(req.body);
-    res.send("Ready to Add EndPoint");
-});
-app.post("/Add2",(req, res) => {
-    let line={};
-    line.name = req.body.name;
-    line.id = req.body.id;
-    line.date = req.body.date;
-    line.כניסה = req.body.כניסה;
-    line.יציאה = req.body.יציאה;
-    AllData.push(line);
-    line={};
-    line.name = req.body.name2;
-    line.id = req.body.id2;
-    line.date = req.body.date2;
-    line.כניסה = req.body.כניסה2;
-    line.יציאה = req.body.יציאה2;
-    AllData.push(line);
-    res.send("Ready to Add EndPoint");
-});
-app.post("/Delete",(req, res) => {
-    let idx= req.body.idx;
-    console.log("del",idx);
-    AllData.splice(Number(idx),1);
-    res.send("Ready to Delete");
-});
-app.post("/Update",(req, res) => {
-    let idx=req.body.idx;
-    AllData[idx].name = req.body.name;
-    AllData[idx].id = req.body.id;
-    AllData[idx].date= req.body.date;
-    AllData[idx].כניסה = req.body.כניסה;
-    AllData[idx].יציאה = req.body.יציאה;
-
-
-    res.send("updated");
+router.get("/",function (req,res){
+    res.render("main",{});
 });
 
-//------------------------------------------------
-app.listen(port, () => {            //server starts listening for any attempts from a client to connect at port: {port}
-    console.log(`Now listening on port ${port}`);
+function saveEntry(employeeId, name, id, date) {
+    const currentTime = new Date().toISOString();
+    const query = `INSERT INTO entry_exit (employee_id, name, id, date, entry_time) VALUES (${employeeId}, '${name}', '${id}', '${date}', '${currentTime}')`;
+
+    db_pool.query(query, function(err, rows, fields) {
+        if (err) {
+            console.error(err);
+        } else {
+            console.log('Entry saved successfully');
+        }
+    });
+}
+
+function saveExit(employeeId) {
+    const currentTime = new Date().toISOString();
+    const query = `UPDATE entry_exit SET exit_time = '${currentTime}' WHERE employee_id = ${employeeId} AND exit_time IS NULL`;
+
+    db_pool.query(query, function(err, rows, fields) {
+        if (err) {
+            console.error(err);
+        } else {
+            console.log('Exit saved successfully');
+        }
+    });
+}
+
+router.get('/entry-exit', function(req, res) {
+    const selectQuery = 'SELECT * FROM employees';
+
+    db_pool.query(selectQuery, function(err, employees, fields) {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        } else {
+            res.render('entry-exit', { employees });
+        }
+    });
 });
 
+router.get('/employees-management', function(req, res) {
+    const selectQuery = 'SELECT * FROM employees';
+
+    db_pool.query(selectQuery, function(err, employees, fields) {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        } else {
+            res.render('employees-management', { employees });
+        }
+    });
+});
+
+router.post('/employees-management/add', function(req, res) {
+    const { first_name, last_name } = req.body;
+    const insertQuery = `INSERT INTO employees (first_name, last_name) VALUES ('${first_name}', '${last_name}')`;
+
+    db_pool.query(insertQuery, function(err, result) {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        } else {
+            res.redirect('/employees-management');
+        }
+    });
+});
+
+router.post('/employees-management/update', function(req, res) {
+    const { employee_id, first_name, last_name } = req.body;
+    const updateQuery = `UPDATE employees SET first_name = '${first_name}', last_name = '${last_name}' WHERE employee_id = ${employee_id}`;
+
+    db_pool.query(updateQuery, function(err, result) {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        } else {
+            res.redirect('/employees-management');
+        }
+    });
+});
+
+router.post('/employees-management/delete', function(req, res) {
+    const { employee_id } = req.body;
+    const deleteQuery = `DELETE FROM employees WHERE employee_id = ${employee_id}`;
+
+    db_pool.query(deleteQuery, function(err, result) {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        } else {
+            res.redirect('/employees-management');
+        }
+    });
+});
+
+router.get("/getEmployees", (req, res) => {
+    const query = "SELECT * FROM employees";
+    db_pool.query(query, (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).json({ message: "שגיאה בשאלה למסד נתונים" });
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+router.post("/addEmployee", (req, res) => {
+    const { name, id, date, entry, exit } = req.body;
+    const query = `INSERT INTO employees (name, id, date, entry, exit) VALUES (?, ?, ?, ?, ?)`;
+    const values = [name, id, date, entry, exit];
+
+    db_pool.query(query, values, (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).json({ message: "שגיאה בהוספת העובד למסד נתונים" });
+        } else {
+            res.json({ message: "העובד נוסף בהצלחה" });
+        }
+    });
+});
+
+router.put("/updateEmployee/:id", (req, res) => {
+    const id = req.params.id;
+    const { name, date, entry, exit } = req.body;
+    const query = `UPDATE employees SET name = ?, date = ?, entry = ?, exit = ? WHERE id = ?`;
+    const values = [name, date, entry, exit, id];
+
+    db_pool.query(query, values, (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).json({ message: "שגיאה בעדכון פרטי העובד במסד נתונים" });
+        } else {
+            res.json({ message: "פרטי העובד עודכנו בהצלחה" });
+        }
+    });
+});
+
+router.delete("/deleteEmployee/:id", (req, res) => {
+    const id = req.params.id;
+    const query = "DELETE FROM employees WHERE id = ?";
+    const values = [id];
+
+    db_pool.query(query, values, (err, results) => {
+        if (err) {
+            console.error(err);
+            res.status(500).json({ message: "שגיאה במחיקת העובד ממסד הנתונים" });
+        } else {
+            res.json({ message: "העובד נמחק בהצלחה" });
+        }
+    });
+});
+
+module.exports = router;

@@ -29,38 +29,28 @@
         <th>תאריך</th>
         <th>כניסה</th>
         <th>יציאה</th>
+        <th>פעולות</th>
     </tr>
     </thead>
     <tbody id="mainTable">  </tbody>
 </table>
 
+<!-- שדה עבור השעה הנכונה של היציאה -->
+<input type="text" id="exitTime" readonly>
+
 <script>
     let raw_data=[];
-    let srchTerm="";
-
-    function FilterData(el){
-        console.log("FilterData::",el);
-        if(srchTerm=="")
-            return true;
-        let reg=new RegExp(srchTerm,"i");
-        if(reg.test(el.name)){
-            return true;
-        }
-        return false;
-    }
 
     function CreateTable(){
-        srchTerm=document.getElementById("filterField").value;
-        let data=raw_data.filter(FilterData);
         let str="";
-        for(let line of data){
+        for(let i = 0; i < raw_data.length; i++) {
             str+="<tr>";
-            str+="<td>"+line.name+"</td>";
-            str+=`<td>${line.id}</td>`;
-            str+=`<td>${line.date}</td>`;
-            str+=`<td>${line.clockIn}</td>`;
-            str+=`<td>${line.clockOut}</td>`;
-            str+=`<td><button onclick="deleteRow(${line.idxOnServer});">מחק</button></td>`;
+            str+="<td>"+raw_data[i].name+"</td>";
+            str+="<td>"+raw_data[i].id+"</td>";
+            str+="<td>"+raw_data[i].date+"</td>";
+            str+="<td id='clockInTime_"+i+"'>"+raw_data[i].clockIn+"</td>";
+            str+="<td>"+raw_data[i].clockOut+"</td>";
+            str+="<td><button onclick='deleteRow("+i+");'>מחק</button></td>";
             str+="</tr>";
         }
         document.getElementById("mainTable").innerHTML=str;
@@ -79,25 +69,19 @@
         let date=document.getElementById("date").value;
 
         if (name.trim() !== "" && id.trim() !== "" && date.trim() !== "") {
-            let newRow = document.getElementById("mainTable").insertRow();
-            newRow.innerHTML = `<td>${name}</td><td>${id}</td><td>${date}</td><td></td><td></td><td><button onclick="deleteRow(${raw_data.length});">מחק</button></td>`;
-
-            // אפשר גם לשמור את הנתונים במערך ולשלוח אותם לשרת כאשר משתמשים מצליחים
-            // להוסיף את הנתונים לטבלה ולשמור אותם במערך
             raw_data.push({
                 name: name,
                 id: id,
                 date: date,
                 clockIn: "",
-                clockOut: "",
-                idxOnServer: raw_data.length
+                clockOut: ""
             });
+            CreateTable();
         }
     }
 
     async function deleteRow(idx) {
-        document.getElementById("mainTable").deleteRow(idx);
-        raw_data.splice(idx - 1, 1);
+        raw_data.splice(idx, 1);
         CreateTable();
     }
 
@@ -106,14 +90,39 @@
     }
 
     async function clockIn() {
-        // הוספת קוד לכניסה
+        let name = document.getElementById("name").value;
+        let id = document.getElementById("id").value;
+        let date = document.getElementById("date").value;
+
+        if (name.trim() !== "" && id.trim() !== "" && date.trim() !== "") {
+            let currentTime = new Date();
+            let hours = currentTime.getHours();
+            let minutes = currentTime.getMinutes();
+            raw_data[raw_data.length - 1].clockIn = `${hours}:${minutes}`;
+            CreateTable();
+        }
     }
 
     async function clockOut() {
-        // הוספת קוד ליציאה
+        let name = document.getElementById("name").value;
+        let id = document.getElementById("id").value;
+        let date = document.getElementById("date").value;
+
+        if (name.trim() !== "" && id.trim() !== "" && date.trim() !== "") {
+            let currentTime = new Date();
+            let hours = currentTime.getHours();
+            let minutes = currentTime.getMinutes();
+
+            // עדכון שדה השעה של היציאה בדף HTML
+            document.getElementById("exitTime").value = `${hours}:${minutes}`;
+
+            raw_data[raw_data.length - 1].clockOut = `${hours}:${minutes}`;
+            CreateTable();
+        }
     }
 
     getList();
 </script>
 <%- include("bottom.ejs") %>
-
+</body>
+</html>
