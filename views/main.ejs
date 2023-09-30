@@ -15,12 +15,7 @@
     <button onclick="clockOut();">יציאה</button>
 </div>
 
-<hr>
-<button onclick="deleteRow();">מחק שורה</button>
 <hr />
-<button onclick="editRow();">ערוך שורה</button>
-<hr />
-
 <table>
     <thead>
     <tr>
@@ -51,7 +46,7 @@
             str += "<td>" + raw_data[i].date + "</td>";
             str += "<td id='clockInTime_" + i + "'>" + raw_data[i].clockIn + "</td>";
             str += "<td id='clockOutTime_" + i + "'>" + raw_data[i].clockOut + "</td>";
-            str += "<td><button onclick='deleteRow(" + i + ");'>מחק</button></td>";
+            str += "<td><button onclick='editRow(" + i + ");'>ערוך</button><button onclick='deleteRow(" + i + ");'>מחק</button></td>";
             str += "</tr>";
         }
         document.getElementById("mainTable").innerHTML = str;
@@ -91,19 +86,8 @@
         CreateTable();
     }
 
-    async function editRow() {
-        if (currentEditIndex !== -1) {
-            let name = document.getElementById("name").value;
-            let id = document.getElementById("id").value;
-
-            if (name.trim() !== "" && id.trim() !== "") {
-                raw_data[currentEditIndex].name = name;
-                raw_data[currentEditIndex].id = id;
-                CreateTable();
-                clearForm();
-                currentEditIndex = -1;
-            }
-        }
+    async function editRow(index) {
+        enableEditMode(index);
     }
 
     async function clockIn() {
