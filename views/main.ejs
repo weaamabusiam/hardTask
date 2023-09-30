@@ -1,5 +1,7 @@
 <%- include("top.ejs") %>
-<title>מסך עובדים</title>
+<head>
+    <title>מסך עובדים</title>
+</head>
 
 <body>
 
@@ -15,9 +17,9 @@
 
 <hr>
 <button onclick="deleteRow();">מחק שורה</button>
-<hr/>
+<hr />
 <button onclick="editRow();">ערוך שורה</button>
-<hr/>
+<hr />
 
 <table>
     <thead>
@@ -30,29 +32,29 @@
         <th>פעולות</th>
     </tr>
     </thead>
-    <tbody id="mainTable">  </tbody>
+    <tbody id="mainTable"></tbody>
 </table>
 
 <!-- שדה עבור השעה הנכונה של היציאה -->
 <input type="text" id="exitTime" readonly>
 
 <script>
-    let raw_data=[];
+    let raw_data = [];
     let currentEditIndex = -1; // עריכה נוכחית, מתחילה ממספר שאינו תקין
 
-    function CreateTable(){
-        let str="";
-        for(let i = 0; i < raw_data.length; i++) {
-            str+="<tr>";
-            str+="<td>"+raw_data[i].name+"</td>";
-            str+="<td>"+raw_data[i].id+"</td>";
-            str+="<td>"+raw_data[i].date+"</td>";
-            str+="<td id='clockInTime_"+i+"'>"+raw_data[i].clockIn+"</td>";
-            str+="<td id='clockOutTime_"+i+"'>"+raw_data[i].clockOut+"</td>";
-            str+="<td><button onclick='deleteRow("+i+");'>מחק</button></td>";
-            str+="</tr>";
+    function CreateTable() {
+        let str = "";
+        for (let i = 0; i < raw_data.length; i++) {
+            str += "<tr>";
+            str += "<td>" + raw_data[i].name + "</td>";
+            str += "<td>" + raw_data[i].id + "</td>";
+            str += "<td>" + raw_data[i].date + "</td>";
+            str += "<td id='clockInTime_" + i + "'>" + raw_data[i].clockIn + "</td>";
+            str += "<td id='clockOutTime_" + i + "'>" + raw_data[i].clockOut + "</td>";
+            str += "<td><button onclick='deleteRow(" + i + ");'>מחק</button></td>";
+            str += "</tr>";
         }
-        document.getElementById("mainTable").innerHTML=str;
+        document.getElementById("mainTable").innerHTML = str;
     }
 
     function clearForm() {
@@ -66,25 +68,17 @@
         document.getElementById("id").value = raw_data[index].id;
     }
 
-    async function getList() {
-        let response = await fetch('/List');
-        let data = await response.json();
-        raw_data = data;
-        CreateTable();
-    }
-
     async function addNewRow() {
-        let name=document.getElementById("name").value;
-        let id=document.getElementById("id").value;
+        let name = document.getElementById("name").value;
+        let id = document.getElementById("id").value;
 
         if (name.trim() !== "" && id.trim() !== "") {
             let date = new Date().toLocaleDateString();
-            let currentTime = new Date().toLocaleTimeString();
             raw_data.push({
                 name: name,
                 id: id,
                 date: date,
-                clockIn: currentTime,
+                clockIn: "",
                 clockOut: ""
             });
             CreateTable();
@@ -92,19 +86,15 @@
         }
     }
 
-    async function deleteRow() {
-        if (currentEditIndex !== -1) {
-            raw_data.splice(currentEditIndex, 1);
-            currentEditIndex = -1;
-            clearForm();
-            CreateTable();
-        }
+    async function deleteRow(index) {
+        raw_data.splice(index, 1);
+        CreateTable();
     }
 
     async function editRow() {
         if (currentEditIndex !== -1) {
-            let name=document.getElementById("name").value;
-            let id=document.getElementById("id").value;
+            let name = document.getElementById("name").value;
+            let id = document.getElementById("id").value;
 
             if (name.trim() !== "" && id.trim() !== "") {
                 raw_data[currentEditIndex].name = name;
@@ -121,9 +111,6 @@
         let id = document.getElementById("id").value;
 
         if (name.trim() !== "" && id.trim() !== "") {
-            let date = new Date().toLocaleDateString();
-            let currentTime = new Date().toLocaleTimeString();
-
             // שלח בקשת POST לשרת עם המידע הנדרש
             fetch('/clockIn', {
                 method: 'POST',
@@ -133,12 +120,16 @@
                 body: JSON.stringify({
                     name: name,
                     id: id,
-                    date: date,
-                    currentTime: currentTime
                 })
             }).then(response => response.json()).then(data => {
-                // כאן אתה מקבל את התאריך המדויק מהשרת ותוכל לעדכן את השורה הרלוונטית בטבלה
-                // דוגמא: document.getElementById("clockInTime_" + rowIdx).textContent = data.exactTime;
+                // כאן אתה מקבל את התאריך והשעה המדויקים מהשרת ותוכל לעדכן את השורה הרלוונטית בטבלה
+                let lastIndex = raw_data.length - 1;
+                raw_data[lastIndex].date = data.date;
+                raw_data[lastIndex].clockIn = data.exactTime;
+                // עדכן את השעת כניסה בתא המתאים בטבלה
+                document.getElementById("clockInTime_" + lastIndex).innerText = data.exactTime;
+                CreateTable();
+                clearForm();
             }).catch(error => {
                 console.error(error);
             });
@@ -150,9 +141,6 @@
         let id = document.getElementById("id").value;
 
         if (name.trim() !== "" && id.trim() !== "") {
-            let date = new Date().toLocaleDateString();
-            let currentTime = new Date().toLocaleTimeString();
-
             // שלח בקשת POST לשרת עם המידע הנדרש
             fetch('/clockOut', {
                 method: 'POST',
@@ -162,20 +150,19 @@
                 body: JSON.stringify({
                     name: name,
                     id: id,
-                    date: date,
-                    currentTime: currentTime
                 })
             }).then(response => response.json()).then(data => {
-                // כאן אתה מקבל את התאריך המדויק מהשרת ותוכל לעדכן את השורה הרלוונטית בטבלה
-                // דוגמא: document.getElementById("clockOutTime_" + rowIdx).textContent = data.exactTime;
+                // כאן אתה מקבל את התאריך והשעה המדויקים מהשרת ותוכל לעדכן את השורה הרלוונטית בטבלה
+                let lastIndex = raw_data.length - 1;
+                raw_data[lastIndex].clockOut = data.exactTime;
+                // עדכן את השעת יציאה בתא המתאים בטבלה
+                document.getElementById("clockOutTime_" + lastIndex).innerText = data.exactTime;
+                CreateTable();
+                clearForm();
             }).catch(error => {
                 console.error(error);
             });
         }
     }
-
-    getList();
 </script>
 <%- include("bottom.ejs") %>
-</body>
-</html>
