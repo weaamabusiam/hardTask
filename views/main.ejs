@@ -65,12 +65,17 @@
         let id = document.getElementById("id").value;
 
         if (name.trim() !== "" && id.trim() !== "") {
-            let date = new Date().toLocaleDateString();
+            let now = new Date();
+            let hours = now.getHours().toString().padStart(2, '0');
+            let minutes = now.getMinutes().toString().padStart(2, '0');
+            let exactTime = `${hours}:${minutes}`;
+
+            let date = now.toLocaleDateString();
             raw_data.push({
                 name: name,
                 id: id,
                 date: date,
-                clockIn: "",
+                clockIn: exactTime,
                 clockOut: ""
             });
             CreateTable();
@@ -92,28 +97,21 @@
         let id = document.getElementById("id").value;
 
         if (name.trim() !== "" && id.trim() !== "") {
-            // שלח בקשת POST לשרת עם המידע הנדרש
-            fetch('/clockIn', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: name,
-                    id: id,
-                })
-            }).then(response => response.json()).then(data => {
-                // כאן אתה מקבל את התאריך והשעה המדויקים מהשרת ותוכל לעדכן את השורה הרלוונטית בטבלה
-                let lastIndex = raw_data.length - 1;
-                raw_data[lastIndex].date = data.date;
-                raw_data[lastIndex].clockIn = data.exactTime;
-                // עדכן את השעת כניסה בתא המתאים בטבלה
-                document.getElementById("clockInTime_" + lastIndex).innerText = data.exactTime;
-                CreateTable();
-                clearForm();
-            }).catch(error => {
-                console.error(error);
+            let now = new Date();
+            let hours = now.getHours().toString().padStart(2, '0');
+            let minutes = now.getMinutes().toString().padStart(2, '0');
+            let exactTime = `${hours}:${minutes}`;
+
+            let date = now.toLocaleDateString();
+            raw_data.push({
+                name: name,
+                id: id,
+                date: date,
+                clockIn: exactTime,
+                clockOut: ""
             });
+            CreateTable();
+            clearForm();
         }
     }
 
@@ -122,27 +120,17 @@
         let id = document.getElementById("id").value;
 
         if (name.trim() !== "" && id.trim() !== "") {
-            // שלח בקשת POST לשרת עם המידע הנדרש
-            fetch('/clockOut', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: name,
-                    id: id,
-                })
-            }).then(response => response.json()).then(data => {
-                // כאן אתה מקבל את התאריך והשעה המדויקים מהשרת ותוכל לעדכן את השורה הרלוונטית בטבלה
-                let lastIndex = raw_data.length - 1;
-                raw_data[lastIndex].clockOut = data.exactTime;
-                // עדכן את השעת יציאה בתא המתאים בטבלה
-                document.getElementById("clockOutTime_" + lastIndex).innerText = data.exactTime;
-                CreateTable();
-                clearForm();
-            }).catch(error => {
-                console.error(error);
-            });
+            let now = new Date();
+            let hours = now.getHours().toString().padStart(2, '0');
+            let minutes = now.getMinutes().toString().padStart(2, '0');
+            let exactTime = `${hours}:${minutes}`;
+
+            let date = now.toLocaleDateString();
+            let lastIndex = raw_data.length - 1;
+            raw_data[lastIndex].date = date;
+            raw_data[lastIndex].clockOut = exactTime;
+            document.getElementById("clockOutTime_" + lastIndex).innerText = exactTime;
+            clearForm();
         }
     }
 </script>
