@@ -11,8 +11,6 @@
         <input type="text" name="id" id="id" placeholder="מספר זיהוי" />
         <button type="button" onclick="addNewRow();">הוסף שורה</button>
     </form>
-    <button onclick="clockIn();">כניסה</button>
-    <button onclick="clockOut();">יציאה</button>
 </div>
 
 <hr />
@@ -44,6 +42,8 @@
             str += "<td id='clockInTime_" + i + "'>" + raw_data[i].clockIn + "</td>";
             str += "<td id='clockOutTime_" + i + "'>" + raw_data[i].clockOut + "</td>";
             str += "<td><button onclick='editRow(" + i + ");'>ערוך</button><button onclick='deleteRow(" + i + ");'>מחק</button></td>";
+            str += "<td><button onclick='clock(\"in\", " + i + ");'>כניסה</button></td>";
+            str += "<td><button onclick='clock(\"out\", " + i + ");'>יציאה</button></td>";
             str += "</tr>";
         }
         document.getElementById("mainTable").innerHTML = str;
@@ -75,7 +75,7 @@
                 name: name,
                 id: id,
                 date: date,
-                clockIn: exactTime,
+                clockIn: "",
                 clockOut: ""
             });
             CreateTable();
@@ -92,45 +92,27 @@
         enableEditMode(index);
     }
 
-    async function clockIn() {
-        let name = document.getElementById("name").value;
-        let id = document.getElementById("id").value;
-
-        if (name.trim() !== "" && id.trim() !== "") {
+    async function clock(type, index) {
+        if (type === "in") {
             let now = new Date();
             let hours = now.getHours().toString().padStart(2, '0');
             let minutes = now.getMinutes().toString().padStart(2, '0');
             let exactTime = `${hours}:${minutes}`;
 
             let date = now.toLocaleDateString();
-            raw_data.push({
-                name: name,
-                id: id,
-                date: date,
-                clockIn: exactTime,
-                clockOut: ""
-            });
-            CreateTable();
-            clearForm();
-        }
-    }
-
-    async function clockOut() {
-        let name = document.getElementById("name").value;
-        let id = document.getElementById("id").value;
-
-        if (name.trim() !== "" && id.trim() !== "") {
+            raw_data[index].date = date;
+            raw_data[index].clockIn = exactTime;
+            document.getElementById("clockInTime_" + index).innerText = exactTime;
+        } else if (type === "out") {
             let now = new Date();
             let hours = now.getHours().toString().padStart(2, '0');
             let minutes = now.getMinutes().toString().padStart(2, '0');
             let exactTime = `${hours}:${minutes}`;
 
             let date = now.toLocaleDateString();
-            let lastIndex = raw_data.length - 1;
-            raw_data[lastIndex].date = date;
-            raw_data[lastIndex].clockOut = exactTime;
-            document.getElementById("clockOutTime_" + lastIndex).innerText = exactTime;
-            clearForm();
+            raw_data[index].date = date;
+            raw_data[index].clockOut = exactTime;
+            document.getElementById("clockOutTime_" + index).innerText = exactTime;
         }
     }
 </script>
